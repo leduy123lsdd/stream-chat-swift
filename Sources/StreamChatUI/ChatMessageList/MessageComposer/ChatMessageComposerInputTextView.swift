@@ -12,16 +12,9 @@ open class _ChatMessageComposerInputTextView<ExtraData: ExtraDataTypes>: UITextV
     Customizable,
     UIConfigProvider
 {
-    // MARK: - Properties
-            
-    lazy var textViewHeightConstraint = heightAnchor.pin(equalToConstant: .zero)
-    
-    // MARK: - Subviews
-    
-    public lazy var placeholderLabel: UILabel = UILabel().withoutAutoresizingMaskConstraints
-    
-    // MARK: - Overrides
-    
+    open private(set) lazy var textViewHeightConstraint = heightAnchor.pin(equalToConstant: .zero)
+    open lazy var placeholderLabel: UILabel = UILabel().withoutAutoresizingMaskConstraints
+
     override public var text: String! {
         didSet {
             textDidChangeProgrammatically()
@@ -44,9 +37,7 @@ open class _ChatMessageComposerInputTextView<ExtraData: ExtraDataTypes>: UITextV
         setUpAppearance()
         updateContent()
     }
-    
-    // MARK: Public
-    
+
     open func defaultAppearance() {
         font = uiConfig.font.body
         textContainer.lineFragmentPadding = 10
@@ -81,20 +72,18 @@ open class _ChatMessageComposerInputTextView<ExtraData: ExtraDataTypes>: UITextV
             )
         )
         placeholderLabel.pin(anchors: [.centerY], to: self)
-        
         isScrollEnabled = false
-        
         textViewHeightConstraint.isActive = true
     }
     
     open func updateContent() {}
     
-    func textDidChangeProgrammatically() {
+    open func textDidChangeProgrammatically() {
         delegate?.textViewDidChange?(self)
         textDidChange()
     }
         
-    @objc func textDidChange() {
+    @objc open func textDidChange() {
         placeholderLabel.isHidden = !text.isEmpty
         textViewHeightConstraint.constant = calculatedTextHeight() + textContainerInset.bottom + textContainerInset.top
         layoutIfNeeded()
