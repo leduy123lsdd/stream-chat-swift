@@ -540,14 +540,14 @@ open class _ChatMessageContentView<ExtraData: ExtraDataTypes>: _View, UIConfigPr
         updateAvatarView()
         updateMessagePosition()
         updateErrorIndicator()
-        updateQuotedMessageView()
 
         // Additional views
         updateTextView()
+        updateQuotedMessageView()
         updateLinkPreviewView()
         updateAttachmentsView()
         
-        // Necessary cnstraints
+        // Necessary constraints
         layoutConstraints.values.flatMap { $0 }.forEach { constraintsToDeactivate.append($0) }
         layoutConstraints[message.layoutOptions]?.forEach { constraintsToActivate.append($0) }
 
