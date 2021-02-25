@@ -120,6 +120,7 @@ open class _ChatMessageListVC<ExtraData: ExtraDataTypes>: _ViewController,
         collectionView.addGestureRecognizer(longPress)
 
         registerMessageCell(uiConfig.messageList.defaultMessageCell)
+        registerMessageCell(uiConfig.messageList.textOnlyMessageCell)
     }
 
     override open func setUpLayout() {
@@ -182,9 +183,15 @@ open class _ChatMessageListVC<ExtraData: ExtraDataTypes>: _ViewController,
     
     open func cellReuseIdentifierForMessage(_ message: _ChatMessageGroupPart<ExtraData>) -> String {
         if message.isSentByCurrentUser {
-            return uiConfig.messageList.defaultMessageCell.outgoingMessageReuseId
+            return message.layoutOptions == [.text]
+                ? uiConfig.messageList.textOnlyMessageCell.outgoingMessageReuseId
+                : uiConfig.messageList.defaultMessageCell.outgoingMessageReuseId
+
         } else {
-            return uiConfig.messageList.defaultMessageCell.incomingMessageReuseId
+            return message.layoutOptions == [.text]
+                ? uiConfig.messageList.textOnlyMessageCell.incomingMessageReuseId
+                : uiConfig.messageList.defaultMessageCell.incomingMessageReuseId
+
         }
     }
 
