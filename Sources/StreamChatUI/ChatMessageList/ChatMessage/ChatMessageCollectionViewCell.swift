@@ -8,6 +8,10 @@ import UIKit
 public typealias СhatMessageCollectionViewCell = _СhatMessageCollectionViewCell<NoExtraData>
 
 open class _СhatMessageCollectionViewCell<ExtraData: ExtraDataTypes>: _CollectionViewCell, UIConfigProvider {
+
+    public static var incomingMessageReuseId: String { "incoming_\(reuseId)" }
+    public static var outgoingMessageReuseId: String { "outgoing_\(reuseId)" }
+
     class var reuseId: String { String(describing: self) }
 
     public var message: _ChatMessageGroupPart<ExtraData>? {
@@ -28,6 +32,9 @@ open class _СhatMessageCollectionViewCell<ExtraData: ExtraDataTypes>: _Collecti
         hasCompletedStreamSetup = true
     }
 
+    var messageViewLeadingConstraint: NSLayoutConstraint?
+    var messageViewTrailingConstraint: NSLayoutConstraint?
+
     override open func setUpLayout() {
         contentView.addSubview(messageView)
 
@@ -40,6 +47,27 @@ open class _СhatMessageCollectionViewCell<ExtraData: ExtraDataTypes>: _Collecti
 
     override open func updateContent() {
         messageView.message = message
+
+        switch message?.isSentByCurrentUser {
+        case true?:
+            assert(messageViewLeadingConstraint == nil, "The cell was already used for incoming message")
+            if messageViewTrailingConstraint == nil {
+                messageViewTrailingConstraint = messageView.trailingAnchor
+                    .pin(equalTo: contentView.layoutMarginsGuide.trailingAnchor)
+                messageViewTrailingConstraint!.isActive = true
+            }
+
+        case false?:
+            assert(messageViewTrailingConstraint == nil, "The cell was already used for outgoing message")
+            if messageViewLeadingConstraint == nil {
+                messageViewLeadingConstraint = messageView.leadingAnchor
+                    .pin(equalTo: contentView.layoutMarginsGuide.leadingAnchor)
+                messageViewLeadingConstraint!.isActive = true
+            }
+
+        case nil:
+            break
+        }
     }
 
     // MARK: - Overrides
@@ -75,19 +103,5 @@ open class _СhatMessageCollectionViewCell<ExtraData: ExtraDataTypes>: _Collecti
         )
 
         return preferredAttributes
-    }
-}
-
-class СhatIncomingMessageCollectionViewCell<ExtraData: ExtraDataTypes>: _СhatMessageCollectionViewCell<ExtraData> {
-    override func setUpLayout() {
-        super.setUpLayout()
-        messageView.leadingAnchor.pin(equalTo: contentView.layoutMarginsGuide.leadingAnchor).isActive = true
-    }
-}
-
-class СhatOutgoingMessageCollectionViewCell<ExtraData: ExtraDataTypes>: _СhatMessageCollectionViewCell<ExtraData> {
-    override func setUpLayout() {
-        super.setUpLayout()
-        messageView.trailingAnchor.pin(equalTo: contentView.layoutMarginsGuide.trailingAnchor).isActive = true
     }
 }
