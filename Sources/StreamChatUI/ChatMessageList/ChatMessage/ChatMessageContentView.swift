@@ -20,89 +20,27 @@ open class _ChatMessageContentView<ExtraData: ExtraDataTypes>: _View, UIConfigPr
 
     // MARK: - Subviews
 
-    public private(set) lazy var messageBubbleView = uiConfig
-        .messageList
-        .messageContentSubviews
-        .bubbleView.init()
-        .withoutAutoresizingMaskConstraints
+    public private(set) var messageBubbleView: _ChatMessageBubbleView<ExtraData>?
     
-    // --
-    public private(set) lazy var textView: UITextView = {
-        let textView = OnlyLinkTappableTextView()
-        textView.isEditable = false
-        textView.dataDetectorTypes = .link
-        textView.isScrollEnabled = false
-        textView.backgroundColor = .clear
-        textView.font = uiConfig.font.body
-        textView.adjustsFontForContentSizeCategory = true
-        textView.textContainerInset = .zero
-        textView.textContainer.lineFragmentPadding = 0
-        return textView.withoutAutoresizingMaskConstraints
-    }()
+    public private(set) var textView: UITextView?
     
-    public private(set) lazy var linkPreviewView = uiConfig
-        .messageList
-        .messageContentSubviews
-        .linkPreviewView
-        .init()
-        .withoutAutoresizingMaskConstraints
+    public private(set) var linkPreviewView: _ChatMessageLinkPreviewView<ExtraData>?
     
-    public private(set) lazy var quotedMessageView = uiConfig
-        .messageList
-        .messageContentSubviews
-        .quotedMessageBubbleView.init()
-        .withoutAutoresizingMaskConstraints
+    public private(set) var quotedMessageView: _ChatMessageQuoteBubbleView<ExtraData>?
     
-    public private(set) lazy var attachmentsView = uiConfig
-        .messageList
-        .messageContentSubviews
-        .attachmentSubviews
-        .attachmentsView
-        .init()
-        .withoutAutoresizingMaskConstraints
-    // --
+    public private(set) var attachmentsView: _ChatMessageAttachmentsView<ExtraData>?
 
-    public private(set) lazy var messageMetadataView = uiConfig
-        .messageList
-        .messageContentSubviews
-        .metadataView
-        .init()
-        .withoutAutoresizingMaskConstraints
+    public private(set) var messageMetadataView: _ChatMessageMetadataView<ExtraData>?
     
-    public private(set) lazy var authorAvatarView = uiConfig
-        .messageList
-        .messageContentSubviews
-        .authorAvatarView
-        .init()
-        .withoutAutoresizingMaskConstraints
+    public private(set) var authorAvatarView: ChatAvatarView?
 
-    public private(set) lazy var reactionsBubble = uiConfig
-        .messageList
-        .messageReactions
-        .reactionsBubbleView
-        .init()
-        .withoutAutoresizingMaskConstraints
+    public private(set) var reactionsBubble: _ChatMessageReactionsBubbleView<ExtraData>?
 
-    public private(set) lazy var threadArrowView = uiConfig
-        .messageList
-        .messageContentSubviews
-        .threadArrowView
-        .init()
-        .withoutAutoresizingMaskConstraints
+    public private(set) var threadArrowView: _ChatMessageThreadArrowView<ExtraData>?
 
-    public private(set) lazy var threadView = uiConfig
-        .messageList
-        .messageContentSubviews
-        .threadInfoView
-        .init()
-        .withoutAutoresizingMaskConstraints
+    public private(set) var threadView: _ChatMessageThreadInfoView<ExtraData>?
 
-    public private(set) lazy var errorIndicator = uiConfig
-        .messageList
-        .messageContentSubviews
-        .errorIndicator
-        .init()
-        .withoutAutoresizingMaskConstraints
+    public private(set) var errorIndicator: _ChatMessageErrorIndicator<ExtraData>?
 
     var incomingMessageConstraints: [NSLayoutConstraint] = []
     var outgoingMessageConstraints: [NSLayoutConstraint] = []
@@ -116,120 +54,329 @@ open class _ChatMessageContentView<ExtraData: ExtraDataTypes>: _View, UIConfigPr
     public fileprivate(set) var layoutConstraints: [ChatMessageContentViewLayoutOptions: [NSLayoutConstraint]] = [:]
 
     // MARK: - Overrides
-
-    override open func setUp() {
-        super.setUp()
-
-        reactionsBubble.isUserInteractionEnabled = false
-        threadView.addTarget(self, action: #selector(didTapOnThread), for: .touchUpInside)
-        errorIndicator.addTarget(self, action: #selector(didTapOnErrorIndicator), for: .touchUpInside)
-        linkPreviewView.addTarget(self, action: #selector(didTapOnLinkPreview), for: .touchUpInside)
-    }
-
-    override open func setUpLayout() {
+    
+    open func setupMessageBubbleView() {
+        guard messageBubbleView == nil else { return }
+        
+        let messageBubbleView = uiConfig
+            .messageList
+            .messageContentSubviews
+            .bubbleView.init()
+            .withoutAutoresizingMaskConstraints
+        self.messageBubbleView = messageBubbleView
+        
         addSubview(messageBubbleView)
+        
+        constraintsToActivate += [
+            messageBubbleView.trailingAnchor.pin(equalTo: trailingAnchor).almostRequired,
+            messageBubbleView.topAnchor.pin(equalTo: topAnchor).with(priority: .defaultHigh),
+            messageBubbleView.bottomAnchor.pin(equalTo: bottomAnchor).with(priority: .defaultHigh),
+        ]
+        
+        setNeedsUpdateConstraints()
+        
+        outgoingMessageConstraints += [
+            messageBubbleView.leadingAnchor.pin(equalTo: leadingAnchor),
+        ]
+    }
+    
+    open func setupMetadataView() {
+        guard messageMetadataView == nil else { return }
+        
+        let messageMetadataView = uiConfig
+            .messageList
+            .messageContentSubviews
+            .metadataView
+            .init()
+            .withoutAutoresizingMaskConstraints
+        
+        self.messageMetadataView = messageMetadataView
+        
         addSubview(messageMetadataView)
+        
+        constraintsToActivate += [
+            messageMetadataView.heightAnchor.pin(equalToConstant: 16),
+            messageMetadataView.bottomAnchor.pin(equalTo: bottomAnchor),
+        ]
+        
+        guard let messageBubbleView = messageBubbleView else { return }
+        
+        incomingMessageConstraints += [
+            messageMetadataView.leadingAnchor.pin(equalTo: messageBubbleView.leadingAnchor).with(priority: .defaultHigh),
+        ]
+        
+        outgoingMessageConstraints += [
+            messageMetadataView.trailingAnchor.pin(equalTo: messageBubbleView.trailingAnchor).with(priority: .defaultHigh),
+        ]
+        
+        bubbleToMetadataConstraint = messageMetadataView.topAnchor.pin(
+            equalToSystemSpacingBelow: messageBubbleView.bottomAnchor,
+            multiplier: 1
+        )
+        
+        setNeedsUpdateConstraints()
+    }
+    
+    open func setupAvatarView() {
+        guard authorAvatarView == nil else { return }
+        
+        let authorAvatarView = uiConfig
+            .messageList
+            .messageContentSubviews
+            .authorAvatarView
+            .init()
+            .withoutAutoresizingMaskConstraints
+        self.authorAvatarView = authorAvatarView
+        
         addSubview(authorAvatarView)
-        addSubview(reactionsBubble)
-        addSubview(threadArrowView)
-        addSubview(threadView)
-        addSubview(errorIndicator)
-
-        errorIndicator.setContentCompressionResistancePriority(.required, for: .horizontal)
-        errorIndicator.setContentCompressionResistancePriority(.required, for: .vertical)
-
-        incomingMessageIsThreadConstraints = [
-            threadView.bottomAnchor.pin(equalTo: bottomAnchor),
-            messageMetadataView.leadingAnchor.pin(equalToSystemSpacingAfter: threadView.trailingAnchor, multiplier: 1)
-        ]
-
-        outgoingMessageIsThreadConstraints = [
-            threadView.bottomAnchor.pin(equalTo: bottomAnchor),
-            threadView.leadingAnchor.pin(equalToSystemSpacingAfter: messageMetadataView.trailingAnchor, multiplier: 1)
-        ]
-
-        NSLayoutConstraint.activate([
+        
+        constraintsToActivate += [
             authorAvatarView.widthAnchor.pin(equalToConstant: 32),
             authorAvatarView.heightAnchor.pin(equalToConstant: 32),
             authorAvatarView.leadingAnchor.pin(equalTo: leadingAnchor),
             authorAvatarView.bottomAnchor.pin(equalTo: bottomAnchor),
-            
+        ]
+        
+        guard let messageBubbleView = messageBubbleView else { return }
+        
+        incomingMessageConstraints += [
+            messageBubbleView.leadingAnchor.pin(
+                equalToSystemSpacingAfter: authorAvatarView.trailingAnchor,
+                multiplier: 1
+            ),
+        ]
+        
+        setNeedsUpdateConstraints()
+    }
+    
+    open func setupReactionsView() {
+        guard reactionsBubble == nil else { return }
+        
+        let reactionsBubble = uiConfig
+            .messageList
+            .messageReactions
+            .reactionsBubbleView
+            .init()
+            .withoutAutoresizingMaskConstraints
+        self.reactionsBubble = reactionsBubble
+        
+        addSubview(reactionsBubble)
+        
+        reactionsBubble.isUserInteractionEnabled = false
+        
+        constraintsToActivate += [
             reactionsBubble.topAnchor.pin(equalTo: topAnchor),
-            
-            messageBubbleView.trailingAnchor.pin(equalTo: trailingAnchor).almostRequired,
-            messageBubbleView.topAnchor.pin(equalTo: topAnchor).with(priority: .defaultHigh),
-            messageBubbleView.bottomAnchor.pin(equalTo: bottomAnchor).with(priority: .defaultHigh),
-            
-            messageMetadataView.heightAnchor.pin(equalToConstant: 16),
-            messageMetadataView.bottomAnchor.pin(equalTo: bottomAnchor),
-            
-            threadArrowView.widthAnchor.pin(equalToConstant: 16),
-            threadArrowView.topAnchor.pin(equalTo: messageBubbleView.centerYAnchor),
-            threadArrowView.bottomAnchor.pin(equalTo: threadView.centerYAnchor),
-            
-            threadView.topAnchor.pin(equalToSystemSpacingBelow: messageBubbleView.bottomAnchor, multiplier: 1),
-            
-            errorIndicator.bottomAnchor.pin(equalTo: messageBubbleView.bottomAnchor),
-            errorIndicator.trailingAnchor.pin(equalTo: trailingAnchor)
-        ])
-
+        ]
+        
         // this one is ugly: reactions view is part of message content, but is not part of it frame horizontally.
         // In same time we want to prevent reactions view to slip out of screen / cell.
         // We maybe should rethink layout of content view and make reactions part of frame horizontally as well.
         // This will solve superview access hack
         if let superview = self.superview {
-            reactionsBubble.trailingAnchor.pin(lessThanOrEqualTo: superview.trailingAnchor).isActive = true
-            reactionsBubble.leadingAnchor.pin(greaterThanOrEqualTo: superview.leadingAnchor).isActive = true
+            constraintsToActivate += [
+                reactionsBubble.trailingAnchor.pin(lessThanOrEqualTo: superview.trailingAnchor),
+                reactionsBubble.leadingAnchor.pin(greaterThanOrEqualTo: superview.leadingAnchor)
+            ]
         }
-
-        incomingMessageConstraints = [
+        
+        guard let messageBubbleView = messageBubbleView else { return }
+        
+        incomingMessageConstraints += [
             reactionsBubble.centerXAnchor.pin(equalTo: messageBubbleView.trailingAnchor, constant: 8),
             reactionsBubble.tailLeadingAnchor.pin(equalTo: messageBubbleView.trailingAnchor, constant: -5),
-            
-            messageMetadataView.leadingAnchor.pin(equalTo: messageBubbleView.leadingAnchor).with(priority: .defaultHigh),
-            messageBubbleView.leadingAnchor.pin(
-                equalToSystemSpacingAfter: authorAvatarView.trailingAnchor,
-                multiplier: 1
-            ),
-            threadArrowView.leadingAnchor.pin(equalTo: messageBubbleView.leadingAnchor),
-            threadView.leadingAnchor.pin(equalTo: threadArrowView.trailingAnchor)
         ]
-
-        outgoingMessageConstraints = [
+        
+        outgoingMessageConstraints += [
             reactionsBubble.centerXAnchor.pin(equalTo: messageBubbleView.leadingAnchor, constant: -8),
             reactionsBubble.tailTrailingAnchor.pin(equalTo: messageBubbleView.leadingAnchor, constant: 5),
-            
-            messageMetadataView.trailingAnchor.pin(equalTo: messageBubbleView.trailingAnchor).with(priority: .defaultHigh),
-            messageBubbleView.leadingAnchor.pin(equalTo: leadingAnchor),
-            threadArrowView.trailingAnchor.pin(equalTo: messageBubbleView.trailingAnchor),
-            threadView.trailingAnchor.pin(equalTo: threadArrowView.leadingAnchor)
         ]
-
+        
         bubbleToReactionsConstraint = messageBubbleView.topAnchor.pin(
             equalTo: reactionsBubble.centerYAnchor
         )
-        bubbleToMetadataConstraint = messageMetadataView.topAnchor.pin(
-            equalToSystemSpacingBelow: messageBubbleView.bottomAnchor,
-            multiplier: 1
-        )
+        
+        setNeedsUpdateConstraints()
+    }
+    
+    open func setupThreadArrowView() {
+        guard threadArrowView == nil,
+              let messageBubbleView = messageBubbleView else { return }
+        
+        let threadArrowView = uiConfig
+            .messageList
+            .messageContentSubviews
+            .threadArrowView
+            .init()
+            .withoutAutoresizingMaskConstraints
+        self.threadArrowView = threadArrowView
+        
+        addSubview(threadArrowView)
+        
+        constraintsToActivate += [
+            threadArrowView.widthAnchor.pin(equalToConstant: 16),
+            threadArrowView.topAnchor.pin(equalTo: messageBubbleView.centerYAnchor),
+            
+        ]
+        
+        incomingMessageConstraints += [
+            threadArrowView.leadingAnchor.pin(equalTo: messageBubbleView.leadingAnchor),
+        ]
+        
+        outgoingMessageConstraints += [
+            threadArrowView.trailingAnchor.pin(equalTo: messageBubbleView.trailingAnchor),
+        ]
+        
+        setNeedsUpdateConstraints()
+    }
+    
+    open func setupThreadView() {
+        guard threadView == nil,
+              let messageBubbleView = messageBubbleView,
+              let threadArrowView = threadArrowView else { return }
+        
+        let threadView = uiConfig
+            .messageList
+            .messageContentSubviews
+            .threadInfoView
+            .init()
+            .withoutAutoresizingMaskConstraints
+        self.threadView = threadView
+        
+        addSubview(threadView)
+        
+        threadView.addTarget(self, action: #selector(didTapOnThread), for: .touchUpInside)
+        
+        constraintsToActivate += [
+            threadArrowView.bottomAnchor.pin(equalTo: threadView.centerYAnchor),
+            threadView.topAnchor.pin(equalToSystemSpacingBelow: messageBubbleView.bottomAnchor, multiplier: 1),
+        ]
+        
+        // TODO this doesn't make sense
+        guard let messageMetadataView = messageMetadataView else { return }
+
+        incomingMessageIsThreadConstraints = [
+            threadView.bottomAnchor.pin(equalTo: bottomAnchor),
+            messageMetadataView.leadingAnchor.pin(equalToSystemSpacingAfter: threadView.trailingAnchor, multiplier: 1)
+        ]
+        
+        outgoingMessageIsThreadConstraints = [
+            threadView.bottomAnchor.pin(equalTo: bottomAnchor),
+            threadView.leadingAnchor.pin(equalToSystemSpacingAfter: messageMetadataView.trailingAnchor, multiplier: 1)
+        ]
+        
+        incomingMessageConstraints += [
+            threadView.leadingAnchor.pin(equalTo: threadArrowView.trailingAnchor)
+        ]
+        
+        outgoingMessageConstraints += [
+            threadView.trailingAnchor.pin(equalTo: threadArrowView.leadingAnchor)
+        ]
+        
+        setNeedsUpdateConstraints()
+    }
+    
+    open func setupErrorIndicator() {
+        guard errorIndicator == nil, let messageBubbleView = messageBubbleView else { return }
+        
+        let errorIndicator = uiConfig
+            .messageList
+            .messageContentSubviews
+            .errorIndicator
+            .init()
+            .withoutAutoresizingMaskConstraints
+        self.errorIndicator = errorIndicator
+        
+        addSubview(errorIndicator)
+        
+        errorIndicator.addTarget(self, action: #selector(didTapOnErrorIndicator), for: .touchUpInside)
+        
+        errorIndicator.setContentCompressionResistancePriority(.required, for: .horizontal)
+        errorIndicator.setContentCompressionResistancePriority(.required, for: .vertical)
+        
+        constraintsToActivate += [
+            errorIndicator.bottomAnchor.pin(equalTo: messageBubbleView.bottomAnchor),
+            errorIndicator.trailingAnchor.pin(equalTo: trailingAnchor)
+        ]
+        
         bubbleToErrorIndicatorConstraint = messageBubbleView.trailingAnchor.pin(
             equalTo: errorIndicator.centerXAnchor
         )
         
-        // --
+        setNeedsUpdateConstraints()
+    }
+    
+    open func setupQuoteView() {
+        guard quotedMessageView == nil else { return }
+        
+        let quotedMessageView = uiConfig
+        .messageList
+        .messageContentSubviews
+        .quotedMessageBubbleView.init()
+        .withoutAutoresizingMaskConstraints
+        
+        self.quotedMessageView = quotedMessageView
+        
         addSubview(quotedMessageView)
+        
+        quotedMessageView.isVisible = false
+    }
+    
+    open func setupLinkPreviewView() {
+        guard linkPreviewView == nil else { return }
+        
+        let linkPreviewView = uiConfig
+            .messageList
+            .messageContentSubviews
+            .linkPreviewView
+            .init()
+            .withoutAutoresizingMaskConstraints
+        self.linkPreviewView = linkPreviewView
+        
         addSubview(linkPreviewView)
+        
+        linkPreviewView.isVisible = false
+        
+        linkPreviewView.addTarget(self, action: #selector(didTapOnLinkPreview), for: .touchUpInside)
+    }
+    
+    open func setupTextView() {
+        guard textView == nil else { return }
+        
+        let textView = OnlyLinkTappableTextView()
+        textView.isEditable = false
+        textView.dataDetectorTypes = .link
+        textView.isScrollEnabled = false
+        textView.backgroundColor = .clear
+        textView.font = uiConfig.font.body
+        textView.adjustsFontForContentSizeCategory = true
+        textView.textContainerInset = .zero
+        textView.textContainer.lineFragmentPadding = 0
+        textView.translatesAutoresizingMaskIntoConstraints = false
+        self.textView = textView
+        
         addSubview(textView)
+    }
+    
+    open func setupAttachmentView() {
+        guard attachmentsView == nil, let messageBubbleView = messageBubbleView else { return }
+        
+        let attachmentsView = uiConfig
+            .messageList
+            .messageContentSubviews
+            .attachmentSubviews
+            .attachmentsView
+            .init()
+            .withoutAutoresizingMaskConstraints
+        self.attachmentsView = attachmentsView
         
         // We add `attachmentsView` as a subview to `bubbleView`
         // so it's corners are properly masked
         messageBubbleView.addSubview(attachmentsView)
         
-        // Visibility of these views are controlled in their respective `update` methods
-        quotedMessageView.isVisible = false
-        linkPreviewView.isVisible = false
         attachmentsView.isVisible = false
-        
+    }
+
+    override open func setUpLayout() {
         layoutConstraints[.attachments] = [
             attachmentsView.leadingAnchor.pin(equalTo: messageBubbleView.leadingAnchor),
             attachmentsView.trailingAnchor.pin(equalTo: messageBubbleView.trailingAnchor),
@@ -371,7 +518,9 @@ open class _ChatMessageContentView<ExtraData: ExtraDataTypes>: _View, UIConfigPr
     }
 
     open func updateThreadViews() {
-        guard let message = message else { return /* todo */ }
+        guard let message = message,
+              let threadView = threadView,
+              let threadArrowView = threadArrowView else { return /* todo */ }
 
         let isOutgoing = message.isSentByCurrentUser
         let isPartOfThread = message.isPartOfThread
@@ -398,7 +547,8 @@ open class _ChatMessageContentView<ExtraData: ExtraDataTypes>: _View, UIConfigPr
 
     // todo -> move to the avatar view itself
     open func updateAvatarView() {
-        guard let message = message else { return /* todo */ }
+        guard let message = message,
+              let authorAvatarView = authorAvatarView else { return /* todo */ }
         
         let placeholder = uiConfig.images.userAvatarPlaceholder1
         if let imageURL = message.author.imageURL {
@@ -411,7 +561,8 @@ open class _ChatMessageContentView<ExtraData: ExtraDataTypes>: _View, UIConfigPr
     }
     
     open func updateReactionsView() {
-        guard let message = message else { return /* todo */ }
+        guard let message = message,
+              let reactionsBubble = reactionsBubble else { return /* todo */ }
         
         let userReactionIDs = Set(message.currentUserReactions.map(\.type))
         
@@ -435,7 +586,8 @@ open class _ChatMessageContentView<ExtraData: ExtraDataTypes>: _View, UIConfigPr
     }
     
     open func updateBubbleView() {
-        guard let message = message else { return /* todo */ }
+        guard let message = message,
+              let messageBubbleView = messageBubbleView else { return /* todo */ }
         
         messageBubbleView.message = message
         
@@ -463,13 +615,16 @@ open class _ChatMessageContentView<ExtraData: ExtraDataTypes>: _View, UIConfigPr
     }
     
     open func updateMetadataView() {
+        guard let messageMetadataView = messageMetadataView else { return } //todo
+        
         messageMetadataView.message = message
 
         messageMetadataView.isVisible = message?.isLastInGroup ?? false
     }
     
     open func updateQuotedMessageView() {
-        guard let message = message else { return /* todo */ }
+        guard let message = message,
+              let quotedMessageView = quotedMessageView else { return /* todo */ }
         
         quotedMessageView.isParentMessageSentByCurrentUser = message.isSentByCurrentUser
         quotedMessageView.message = message.quotedMessage
@@ -477,11 +632,13 @@ open class _ChatMessageContentView<ExtraData: ExtraDataTypes>: _View, UIConfigPr
     }
     
     open func updateErrorIndicator() {
+        guard let errorIndicator = errorIndicator else { return } // todo
         errorIndicator.isVisible = message?.lastActionFailed ?? false
     }
     
     open func updateLinkPreviewView() {
-        guard let message = message else { return /* todo */ }
+        guard let message = message,
+              let linkPreviewView = linkPreviewView else { return /* todo */ }
         
         linkPreviewView.content = message.attachments.first { $0.type.isLink } as? ChatMessageDefaultAttachment
         
@@ -489,7 +646,8 @@ open class _ChatMessageContentView<ExtraData: ExtraDataTypes>: _View, UIConfigPr
     }
     
     open func updateAttachmentsView() {
-        guard let message = message else { return /* todo */ }
+        guard let message = message,
+              let attachmentsView = attachmentsView else { return /* todo */ }
         
         attachmentsView.content = .init(
             attachments: message.attachments.compactMap { $0 as? ChatMessageDefaultAttachment },
@@ -501,7 +659,8 @@ open class _ChatMessageContentView<ExtraData: ExtraDataTypes>: _View, UIConfigPr
     }
     
     open func updateTextView() {
-        guard let message = message else { return /* todo */ }
+        guard let message = message,
+              let textView = textView else { return /* todo */ }
         
         let font: UIFont = uiConfig.font.body
         textView.attributedText = .init(string: message.textContent, attributes: [
@@ -565,6 +724,7 @@ open class _ChatMessageContentView<ExtraData: ExtraDataTypes>: _View, UIConfigPr
     }
     
     @objc func didTapOnLinkPreview() {
+        guard let linkPreviewView = linkPreviewView else { return } //todo
         onLinkTap(linkPreviewView.content)
     }
 }
@@ -606,6 +766,8 @@ public class ChatMessageTextContentView<ExtraData: ExtraDataTypes>: _ChatMessage
         
         // Text view
         updateTextView()
+        
+        guard let textView = textView, let messageBubbleView = messageBubbleView else { return } // todo??
         
         // Necessary constraints
         constraintsToActivate += [
