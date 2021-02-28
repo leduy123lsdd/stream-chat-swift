@@ -14,14 +14,11 @@ open class _ChatMessageComposerCheckmarkControl<ExtraData: ExtraDataTypes>: _Con
     
     // MARK: - Subviews
     
-    public private(set) lazy var container = ContainerStackView()
-        .withoutAutoresizingMaskConstraints
+    public private(set) lazy var container = UIStackView().withoutAutoresizingMaskConstraints
     
-    public private(set) lazy var checkmark = UIImageView()
-        .withoutAutoresizingMaskConstraints
+    public private(set) lazy var checkmark = UIImageView().withoutAutoresizingMaskConstraints
     
-    public private(set) lazy var label = UILabel()
-        .withoutAutoresizingMaskConstraints
+    public private(set) lazy var label = UILabel().withoutAutoresizingMaskConstraints
         
     // MARK: - Overrides
     
@@ -50,24 +47,23 @@ open class _ChatMessageComposerCheckmarkControl<ExtraData: ExtraDataTypes>: _Con
     
     override open func setUpLayout() {
         embed(container)
+        container.axis = .horizontal
         
         preservesSuperviewLayoutMargins = true
         
         container.preservesSuperviewLayoutMargins = true
         container.isLayoutMarginsRelativeArrangement = true
         
-        container.centerContainerStackView.spacing = UIStackView.spacingUseSystem
-        
-        container.leftStackView.isHidden = false
-        container.leftStackView.alignment = .center
-        container.leftStackView.addArrangedSubview(checkmark)
+        container.spacing = UIStackView.spacingUseSystem
+
+        container.alignment = .center
+        container.addArrangedSubview(checkmark)
 
         checkmark.heightAnchor.pin(equalToConstant: checkmarkHeight).isActive = true
         checkmark.widthAnchor.pin(equalToConstant: checkmarkHeight).isActive = true
-        
-        container.centerStackView.isHidden = false
-        container.centerStackView.alignment = .center
-        container.centerStackView.addArrangedSubview(label)
+
+        container.alignment = .center
+        container.addArrangedSubview(label)
     }
     
     override open func updateContent() {

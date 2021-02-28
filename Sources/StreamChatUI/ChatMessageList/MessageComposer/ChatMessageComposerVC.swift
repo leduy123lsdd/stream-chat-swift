@@ -111,7 +111,7 @@ open class _ChatMessageComposerVC<ExtraData: ExtraDataTypes>: _ViewController,
             composerView.documentAttachmentsView.isHidden = true
             composerView.imageAttachmentsView.isHidden = true
             composerView.quotedMessageView.setAnimatedly(hidden: true)
-            composerView.container.topStackView.setAnimatedly(hidden: true)
+            composerView.headerView.setAnimatedly(hidden: true)
             composerView.messageInputView.setSlashCommandViews(hidden: true)
             composerView.invalidateIntrinsicContentSize()
         case let .slashCommand(command):
@@ -124,7 +124,7 @@ open class _ChatMessageComposerVC<ExtraData: ExtraDataTypes>: _ViewController,
             composerView.titleLabel.text = L10n.Composer.Title.reply
             let image = uiConfig.images.messageComposerReplyButton.tinted(with: uiConfig.colorPalette.inactiveTint)
             composerView.stateIcon.image = image
-            composerView.container.topStackView.setAnimatedly(hidden: false)
+            composerView.headerView.setAnimatedly(hidden: false)
             composerView.quotedMessageView.setAnimatedly(hidden: false)
             composerView.quotedMessageView.message = messageToQuote
             composerView.invalidateIntrinsicContentSize()
@@ -133,7 +133,7 @@ open class _ChatMessageComposerVC<ExtraData: ExtraDataTypes>: _ViewController,
             composerView.titleLabel.text = L10n.Composer.Title.edit
             let image = uiConfig.images.messageComposerEditMessage.tinted(with: uiConfig.colorPalette.inactiveTint)
             composerView.stateIcon.image = image
-            composerView.container.topStackView.setAnimatedly(hidden: false)
+            composerView.headerView.setAnimatedly(hidden: false)
             textView.text = message.text
             composerView.invalidateIntrinsicContentSize()
         }
@@ -285,7 +285,7 @@ open class _ChatMessageComposerVC<ExtraData: ExtraDataTypes>: _ViewController,
     }
     
     func setInput(shrinked: Bool) {
-        for button in composerView.container.leftStackView.arrangedSubviews where button !== composerView.shrinkInputButton {
+        for button in composerView.attachmentOptionsStackView.arrangedSubviews where button !== composerView.shrinkInputButton {
             button.setAnimatedly(hidden: !shrinked)
         }
         composerView.shrinkInputButton.setAnimatedly(hidden: shrinked)
@@ -511,13 +511,14 @@ open class _ChatMessageComposerVC<ExtraData: ExtraDataTypes>: _ViewController,
     // MARK: - UITextViewDelegate
 
     public func textViewDidChange(_ textView: UITextView) {
+        composerView.stackContainer.invalidateIntrinsicContentSize()
+        composerView.invalidateIntrinsicContentSize()
         isEmpty = textView.text.replacingOccurrences(of: " ", with: "").isEmpty
         replaceTextWithSlashCommandViewIfNeeded()
 
         updateMentionFlag(with: textView.text as NSString, till: textView.selectedRange.location)
 
         promptSuggestionIfNeeded(for: textView.text!)
-        composerView.invalidateIntrinsicContentSize()
     }
 
     func updateMentionFlag(with text: NSString, till caret: Int) {

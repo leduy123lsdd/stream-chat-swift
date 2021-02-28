@@ -60,6 +60,6 @@ open class _ChatMessageComposerInputContainerView<ExtraData: ExtraDataTypes>: _V
     public func setSlashCommandViews(hidden: Bool) {
         slashCommandView.setAnimatedly(hidden: hidden)
         rightAccessoryButton.setAnimatedly(hidden: hidden)
-        slashCommandView.invalidateIntrinsicContentSize()
+//        slashCommandView.invalidateIntrinsicContentSize()
     }
 }

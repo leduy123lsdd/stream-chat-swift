@@ -29,10 +29,10 @@ open class _ChatMessageInputSlashCommandView<ExtraData: ExtraDataTypes>: _View, 
     
     // MARK: - Overrides
     
-    override open var intrinsicContentSize: CGSize {
-        container.systemLayoutSizeFitting(UIView.layoutFittingCompressedSize)
-    }
-    
+//    override open var intrinsicContentSize: CGSize {
+//        container.systemLayoutSizeFitting(UIView.layoutFittingCompressedSize)
+//    }
+//    
     override open func layoutSubviews() {
         super.layoutSubviews()
         

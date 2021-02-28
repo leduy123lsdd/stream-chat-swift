@@ -86,6 +86,6 @@ open class _ChatMessageComposerInputTextView<ExtraData: ExtraDataTypes>: UITextV
     @objc open func textDidChange() {
         placeholderLabel.isHidden = !text.isEmpty
         textViewHeightConstraint.constant = calculatedTextHeight() + textContainerInset.bottom + textContainerInset.top
-        layoutIfNeeded()
+        invalidateIntrinsicContentSize()
     }
 }

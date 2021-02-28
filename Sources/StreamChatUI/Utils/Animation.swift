@@ -16,7 +16,7 @@ func Animate(_ actions: @escaping () -> Void, completion: ((Bool) -> Void)? = ni
         delay: 0,
         usingSpringWithDamping: 0.8,
         initialSpringVelocity: 4,
-        options: .curveEaseInOut,
+        options: [.curveEaseInOut, .beginFromCurrentState],
         animations: actions,
         completion: completion
     )

@@ -24,17 +24,17 @@ open class _ChatMessageComposerDocumentAttachmentsView<ExtraData: ExtraDataTypes
     
     public var didTapRemoveItemButton: ((Int) -> Void)?
     
-    override open var intrinsicContentSize: CGSize {
-        let numberOfVisibleItems = CGFloat(min(documents.count, maxNumberOfVisibleDocuments))
-        let itemsHeight = documentPreviewItemHeight * numberOfVisibleItems
-        let spacings = flowLayout.minimumInteritemSpacing * (numberOfVisibleItems - 1)
-        let height = itemsHeight + spacings + layoutMargins.top + layoutMargins.bottom
-        
-        return .init(
-            width: UIView.noIntrinsicMetric,
-            height: height
-        )
-    }
+//    override open var intrinsicContentSize: CGSize {
+//        let numberOfVisibleItems = CGFloat(min(documents.count, maxNumberOfVisibleDocuments))
+//        let itemsHeight = documentPreviewItemHeight * numberOfVisibleItems
+//        let spacings = flowLayout.minimumInteritemSpacing * (numberOfVisibleItems - 1)
+//        let height = itemsHeight + spacings + layoutMargins.top + layoutMargins.bottom
+//        
+//        return .init(
+//            width: UIView.noIntrinsicMetric,
+//            height: height
+//        )
+//    }
     
     public private(set) lazy var flowLayout = uiConfig
         .messageComposer

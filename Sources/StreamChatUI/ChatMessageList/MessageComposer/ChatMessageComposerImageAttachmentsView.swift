@@ -23,13 +23,13 @@ open class _ChatMessageComposerImageAttachmentsView<ExtraData: ExtraDataTypes>: 
     
     public var didTapRemoveItemButton: ((Int) -> Void)?
     
-    override open var intrinsicContentSize: CGSize {
-        let height = imagePreviewItemSize.height + layoutMargins.top + layoutMargins.bottom
-        return .init(
-            width: UIView.noIntrinsicMetric,
-            height: height
-        )
-    }
+//    override open var intrinsicContentSize: CGSize {
+//        let height = imagePreviewItemSize.height + layoutMargins.top + layoutMargins.bottom
+//        return .init(
+//            width: UIView.noIntrinsicMetric,
+//            height: height
+//        )
+//    }
     
     public private(set) lazy var flowLayout: UICollectionViewFlowLayout = {
         let flowLayout = UICollectionViewFlowLayout()
