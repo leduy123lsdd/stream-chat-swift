@@ -819,6 +819,8 @@
 		F8CF045D25ED398500077209 /* StreamChatUI.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 790881FD25432B7200896F03 /* StreamChatUI.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		F8CF046A25ED417200077209 /* SlackChatChannelListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8CF046925ED417200077209 /* SlackChatChannelListViewController.swift */; };
 		F8CF047C25ED433000077209 /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8CF047B25ED433000077209 /* Colors.swift */; };
+		F8CF048625ED470100077209 /* SlackChatChannelListItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8CF048525ED470100077209 /* SlackChatChannelListItemView.swift */; };
+		F8CF049025ED496A00077209 /* SlackChatChannelAvatarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8CF048F25ED496A00077209 /* SlackChatChannelAvatarView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -1785,6 +1787,8 @@
 		F8CF043825ED388800077209 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		F8CF046925ED417200077209 /* SlackChatChannelListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlackChatChannelListViewController.swift; sourceTree = "<group>"; };
 		F8CF047B25ED433000077209 /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
+		F8CF048525ED470100077209 /* SlackChatChannelListItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlackChatChannelListItemView.swift; sourceTree = "<group>"; };
+		F8CF048F25ED496A00077209 /* SlackChatChannelAvatarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlackChatChannelAvatarView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -3706,6 +3710,8 @@
 			children = (
 				F8CF042A25ED388500077209 /* AppDelegate.swift */,
 				F8CF046925ED417200077209 /* SlackChatChannelListViewController.swift */,
+				F8CF048F25ED496A00077209 /* SlackChatChannelAvatarView.swift */,
+				F8CF048525ED470100077209 /* SlackChatChannelListItemView.swift */,
 				F8CF047B25ED433000077209 /* Colors.swift */,
 				F8CF043325ED388800077209 /* Assets.xcassets */,
 				F8CF043525ED388800077209 /* LaunchScreen.storyboard */,
@@ -5092,8 +5098,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F8CF049025ED496A00077209 /* SlackChatChannelAvatarView.swift in Sources */,
 				F8CF046A25ED417200077209 /* SlackChatChannelListViewController.swift in Sources */,
 				F8CF047C25ED433000077209 /* Colors.swift in Sources */,
+				F8CF048625ED470100077209 /* SlackChatChannelListItemView.swift in Sources */,
 				F8CF042B25ED388500077209 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
