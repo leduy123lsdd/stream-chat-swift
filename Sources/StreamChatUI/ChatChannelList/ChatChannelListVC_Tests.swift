@@ -13,41 +13,8 @@ class ChatChannelListVC_Tests: XCTestCase {
     var mockedChannelListController: ChatChannelListController_Mock<NoExtraData>!
     var mockedCurrentUserController: CurrentChatUserController_Mock<NoExtraData>!
     var mockedRouter: ChatChannelListRouter_Mock<NoExtraData> { vc.router as! ChatChannelListRouter_Mock<NoExtraData> }
-    
-    // Workaround for setting mockedCurrentUserController to userAvatarView.
-    class TestChatChannelListVC: ChatChannelListVC {
-        var mockedCurrentUserController: CurrentChatUserController_Mock<NoExtraData>?
-        
-        override func setUp() {
-            super.setUp()
-            
-            userAvatarView.controller = mockedCurrentUserController
-        }
-    }
-    
-    override func setUp() {
-        super.setUp()
-        mockedChannelListController = ChatChannelListController_Mock.mock()
-        mockedCurrentUserController = CurrentChatUserController_Mock.mock()
-        mockedCurrentUserController.currentUser_mock = .init(
-            id: "Yoda",
-            imageURL: TestImages.yoda.url
-        )
-        
-        let testVC = TestChatChannelListVC()
-        testVC.mockedCurrentUserController = mockedCurrentUserController
-        vc = testVC
-        
-        vc.controller = mockedChannelListController
-        
-        var uiConfig = UIConfig()
-        uiConfig.navigation.channelListRouter = ChatChannelListRouter_Mock<NoExtraData>.self
-        vc.uiConfig = uiConfig
-        
-        NSTimeZone.default = TimeZone(secondsFromGMT: 0)!
-    }
-    
-    func test_chatChannelList_isPopulated() {
+
+    var mockedChannels: [ChatChannel] {
         let channel = ChatChannel.mock(
             cid: .unique,
             name: "Channel 1",
@@ -80,16 +47,143 @@ class ChatChannelListVC_Tests: XCTestCase {
                 ChatMessage.mock(id: "1", text: "Hello2", author: .mock(id: "Vader2"))
             ]
         )
+        return [
+            channel,
+            channelWithOnlineIndicator,
+            channelWithLongTextAndUnreadCount,
+            channelWithMultipleMessages
+        ]
+    }
+    
+    // Workaround for setting mockedCurrentUserController to userAvatarView.
+    class TestChatChannelListVC: ChatChannelListVC {
+        var mockedCurrentUserController: CurrentChatUserController_Mock<NoExtraData>?
+        
+        override func setUp() {
+            super.setUp()
+            
+            userAvatarView.controller = mockedCurrentUserController
+        }
+    }
+    
+    override func setUp() {
+        super.setUp()
+        mockedChannelListController = ChatChannelListController_Mock.mock()
+        mockedCurrentUserController = CurrentChatUserController_Mock.mock()
+        mockedCurrentUserController.currentUser_mock = .init(
+            id: "Yoda",
+            imageURL: TestImages.yoda.url
+        )
+
+        let testVC = TestChatChannelListVC()
+        testVC.mockedCurrentUserController = mockedCurrentUserController
+        vc = testVC
+        vc.controller = mockedChannelListController
+        
+        var uiConfig = UIConfig()
+        uiConfig.navigation.channelListRouter = ChatChannelListRouter_Mock<NoExtraData>.self
+        vc.uiConfig = uiConfig
+        
+        NSTimeZone.default = TimeZone(secondsFromGMT: 0)!
+    }
+
+    func test_emptyAppearance() {
         mockedChannelListController.simulate(
-            channels: [
-                channel,
-                channelWithOnlineIndicator,
-                channelWithLongTextAndUnreadCount,
-                channelWithMultipleMessages
-            ],
+            channels: [],
             changes: []
         )
         AssertSnapshot(vc, isEmbeddedInNavigationController: true)
+    }
+    
+    func test_defaultAppearance() {
+        mockedChannelListController.simulate(
+            channels: mockedChannels,
+            changes: []
+        )
+        AssertSnapshot(vc, isEmbeddedInNavigationController: true)
+    }
+
+    func test_appearanceCustomization_usingUIConfig() {
+        class TestView: CellSeparatorReusableView {
+            override func setUpAppearance() {
+                super.setUpAppearance()
+
+                separatorView.backgroundColor = UIColor.gray
+            }
+
+            override func setUpLayout() {
+                super.setUpLayout()
+
+                separatorView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 15).isActive = true
+            }
+        }
+
+        var config = UIConfig()
+        config.channelList.cellSeparatorReusableView = TestView.self
+
+        vc.uiConfig = config
+
+        mockedChannelListController.simulate(
+            channels: mockedChannels,
+            changes: []
+        )
+        AssertSnapshot(vc, isEmbeddedInNavigationController: true, variants: .onlyUserInterfaceStyles)
+    }
+
+    func test_appearanceCustomization_usingAppearanceHook() {
+        class TestSeparatorView: CellSeparatorReusableView {
+            override func setUpAppearance() {
+                super.setUpAppearance()
+                separatorView.backgroundColor = UIColor.orange
+            }
+        }
+
+        class TestView: TestChatChannelListVC {}
+        TestView.defaultAppearance {
+            $0.createNewChannelButton.tintColor = UIColor.orange
+            if let listLayout = $0.collectionViewLayout as? ListCollectionViewLayout {
+                listLayout.separatorHeight = 4
+                listLayout.register(TestSeparatorView.self, forDecorationViewOfKind: listLayout.separatorIdentifier)
+            }
+        }
+
+        let vc = TestView()
+        vc.controller = mockedChannelListController
+
+        mockedChannelListController.simulate(
+            channels: mockedChannels,
+            changes: []
+        )
+        AssertSnapshot(vc, isEmbeddedInNavigationController: true, variants: .onlyUserInterfaceStyles)
+    }
+
+    func test_appearanceCustomization_usingSubclassing() {
+        class TestSeparatorView: CellSeparatorReusableView {
+            override func setUpAppearance() {
+                super.setUpAppearance()
+                separatorView.backgroundColor = UIColor.orange
+            }
+        }
+
+        class TestView: TestChatChannelListVC {
+            override func setUpAppearance() {
+                super.setUpAppearance()
+                createNewChannelButton.tintColor = UIColor.orange
+                if let listLayout = collectionViewLayout as? ListCollectionViewLayout {
+                    listLayout.separatorHeight = 4
+                    listLayout.register(TestSeparatorView.self, forDecorationViewOfKind: listLayout.separatorIdentifier)
+                }
+            }
+        }
+
+        let vc = TestView()
+        vc.controller = mockedChannelListController
+
+        mockedChannelListController.simulate(
+            channels: mockedChannels,
+            changes: []
+        )
+        AssertSnapshot(vc, isEmbeddedInNavigationController: true, variants: .onlyUserInterfaceStyles)
     }
     
     func test_router_openCreateNewChannel() {
@@ -120,8 +214,5 @@ class ChatChannelListVC_Tests: XCTestCase {
         vc.collectionView(vc.collectionView, didSelectItemAt: IndexPath(item: 0, section: 0))
         XCTAssertEqual(mockedRouter.openChat_channel, vc.controller.channels.first)
     }
-    
-    func test_chatChannelList_isEmpty() {
-        // TODO, no empty states implemented yet.
-    }
+
 }
