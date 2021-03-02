@@ -5,24 +5,45 @@
 import Foundation
 import StreamChat
 
-open class ChatChannelNamer {
-    open var maxMemberNames: Int { 2 }
-    open var separator: String { "," }
-    
-    public required init() {}
-    
-    /// Generates a name for the given channel, given the current user's id.
-    ///
-    /// The priority order is:
-    /// - Assigned name of the channel, if not empty
-    /// - If the channel is direct message (implicit cid):
-    ///   - Name generated from cached members of the channel
-    /// - Channel's id
-    /// - Parameters:
-    ///   - channel: Channel to generate name for.
-    ///   - currentUserId: Logged-in user. This parameter is used when deciding which member's names are going to be displayed.
-    /// - Returns: A valid Channel name.
-    open func name<ExtraData: ExtraDataTypes>(for channel: _ChatChannel<ExtraData>, as currentUserId: UserId?) -> String {
+/// Typealias for closure taking `_ChatChannel<ExtraData>` and `UserId` which returns
+/// the current name of the channel. Use this type when you create closure for naming a channel.
+/// For example usage, see `DefaultChatChannelNamer`
+public typealias ChatChannelNamer = _ChatChannelNamer
+
+/// Typealias for closure taking `_ChatChannel<ExtraData>` and `UserId` which returns
+/// the current name of the channel. Use this type when you create closure for naming a channel.
+/// For example usage, see `DefaultChatChannelNamer`
+public typealias _ChatChannelNamer<ExtraData: ExtraDataTypes> =
+    (_ channel: _ChatChannel<ExtraData>, _ currentUserId: UserId?) -> String?
+
+/// Generates a name for the given channel, given the current user's id.
+///
+/// The priority order is:
+/// - Assigned name of the channel, if not empty
+/// - If the channel is direct message (implicit cid):
+///   - Name generated from cached members of the channel
+/// - Channel's id
+///
+/// Examples:
+/// - If channel has some name, ie. `Channel 1`, this returns `Channel 1`
+/// - If channel has no name and is not direct message, this returns channel ID of the channel
+/// - If channel is direct message, has no name and has members where there just 2,
+/// returns name of the members in alphabetic order: `Luke, Leia`
+/// - If channel is direct message, has no name and has members where there are more than 2,
+/// returns name of the members in alphabetic order with how many members left: `Luke, Leia and 5 others`
+///  - If channel is direct message, has no name and no members, this returns `nil`
+///  - If channel is direct message, has no name and only one member, shows the one member name
+///
+/// - Parameters:
+///   - maxMemberNames: Maximum number of visible members in Channel defaults to `2`
+///   - separator: Separator of the members, defaults to `y`
+/// - Returns: A closure with 2 parameters carrying `channel` used for name generation and `currentUserId` to decide
+/// which members' names are going to be displayed
+public func DefaultChatChannelNamer<ExtraData: ExtraDataTypes>(
+    maxMemberNames: Int = 2,
+    separator: String = ","
+) -> _ChatChannelNamer<ExtraData> {
+    return { channel, currentUserId in
         if let channelName = channel.name, !channelName.isEmpty {
             // If there's an assigned name and it's not empty, we use it
             return channelName
@@ -37,7 +58,7 @@ open class ChatChannelNamer {
                 if let currentUser = channel.cachedMembers.first(where: { $0.id == currentUserId }) {
                     channelName = nameOrId(currentUser.name, currentUser.id)
                 } else {
-                    channelName = currentUserId ?? channel.cid.id
+                    return nil
                 }
             } else {
                 // This channel has more than 2 members
@@ -46,11 +67,10 @@ open class ChatChannelNamer {
                     .joined(separator: "\(separator) ")
                     + (
                         memberNames.count > maxMemberNames
-                            ? " \(L10n.Channel.Name.and) \(memberNames.count - maxMemberNames) \(L10n.Channel.Name.more)"
+                            ? " \(L10n.Channel.Name.andXMore(memberNames.count - maxMemberNames))"
                             : ""
                     )
             }
-            
             return channelName
         } else {
             // We don't have a valid name assigned, and this is not a DM channel
@@ -58,19 +78,19 @@ open class ChatChannelNamer {
             return channel.cid.id
         }
     }
-    
-    /// Entities such as `User`, `Member` and `Channel` have both `name` and `id`, and `name` is preferred for display.
-    /// However, `name` and exists but can be empty, in that case we display `id`.
-    /// This helper encapsulates choosing logic between `name` and `id`
-    /// - Parameters:
-    ///   - name: name of the entity.
-    ///   - id: id of the entity
-    /// - Returns: `name` if it exists and not empty, otherwise `id`
-    private func nameOrId(_ name: String?, _ id: String) -> String {
-        if let name = name, !name.isEmpty {
-            return name
-        } else {
-            return id
-        }
+}
+
+/// Entities such as `User`, `Member` and `Channel` have both `name` and `id`, and `name` is preferred for display.
+/// However, `name` and exists but can be empty, in that case we display `id`.
+/// This helper encapsulates choosing logic between `name` and `id`
+/// - Parameters:
+///   - name: name of the entity.
+///   - id: id of the entity
+/// - Returns: `name` if it exists and not empty, otherwise `id`
+private func nameOrId(_ name: String?, _ id: String) -> String {
+    if let name = name, !name.isEmpty {
+        return name
+    } else {
+        return id
     }
 }
