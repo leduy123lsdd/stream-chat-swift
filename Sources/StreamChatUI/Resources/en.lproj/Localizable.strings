@@ -2,8 +2,7 @@
 // Copyright © 2020 Stream.io Inc. All rights reserved.
 //
 
-"channel.name.and" = "and";
-"channel.name.more" = "more";
+"channel.name.andXMore" = "and %@ more";
 "channel.name.missing" = "NoChannel";
 
 "message.actions.inline-reply" = "Reply";
